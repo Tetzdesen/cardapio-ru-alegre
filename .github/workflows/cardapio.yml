@@ -1,0 +1,60 @@
+name: Cardápio RU Alegre
+
+on:
+  schedule:
+    # horários em UTC — Alegre é UTC-3
+    - cron: "0 23 * * 0-4"    # 20h00 BRT (dom–qui) — prévia do dia seguinte
+    - cron: "30 12 * * 1-5"   # 09h30 BRT (seg–sex) — reconfere e avisa se mudou
+  workflow_dispatch:           # botão de execução manual
+
+permissions:
+  contents: write              # necessário para commitar o arquivo de estado
+
+concurrency:
+  group: cardapio-ru           # evita dois envios simultâneos brigando pelo push
+  cancel-in-progress: false
+
+jobs:
+  notificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Enviar cardápio
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ "${{ github.event.schedule }}" = "0 23 * * 0-4" ]; then
+            DIA=$(TZ=America/Sao_Paulo date -d "+1 day" +%Y-%m-%d)   # prévia
+          else
+            DIA=$(TZ=America/Sao_Paulo date +%Y-%m-%d)               # reconferência
+          fi
+          echo "cardápio de $DIA"
+          python ru_bot.py \
+            --data "$DIA" \
+            --refeicoes almoco,jantar \
+            --campus alegre \
+            --estado estado/ultimo-envio.json \
+            --enviar --vazio-silencioso
+
+      - name: Guardar estado
+        if: always()
+        run: |
+          if [ -z "$(git status --porcelain estado/)" ]; then
+            echo "estado inalterado, nada a commitar"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add estado/
+          git commit -m "estado: cardápio de $(TZ=America/Sao_Paulo date +%F\ %H:%M)"
+          git pull --rebase --autostash
+          git push
