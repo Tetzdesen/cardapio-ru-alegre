@@ -33,14 +33,18 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           if [ "${{ github.event.schedule }}" = "0 23 * * 0-4" ]; then
-            DIA=$(TZ=America/Sao_Paulo date -d "+1 day" +%Y-%m-%d)   # prévia
+            # prévia da noite: cobre o dia seguinte inteiro
+            DIA=$(TZ=America/Sao_Paulo date -d "+1 day" +%Y-%m-%d)
+            REFEICOES=desjejum,almoco,jantar
           else
-            DIA=$(TZ=America/Sao_Paulo date +%Y-%m-%d)               # reconferência
+            # reconferência da manhã: o desjejum já passou
+            DIA=$(TZ=America/Sao_Paulo date +%Y-%m-%d)
+            REFEICOES=almoco,jantar
           fi
-          echo "cardápio de $DIA"
+          echo "cardápio de $DIA ($REFEICOES)"
           python ru_bot.py \
             --data "$DIA" \
-            --refeicoes almoco,jantar \
+            --refeicoes "$REFEICOES" \
             --campus alegre \
             --estado estado/ultimo-envio.json \
             --enviar --vazio-silencioso
