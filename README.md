@@ -68,20 +68,28 @@ quebrou.
 1. Suba o repositório no GitHub.
 2. Settings → Secrets and variables → Actions → New repository secret:
    `TELEGRAM_TOKEN` e `TELEGRAM_CHAT_ID`.
-3. O workflow em `.github/workflows/cardapio.yml` roda 20h (prévia do dia seguinte) e
-   09h30 (reconferência), de segunda a sexta.
+3. O workflow em `.github/workflows/cardapio.yml` roda de segunda a sexta:
+
+| horário (BRT) | o que faz | refeições |
+|---|---|---|
+| **05h40** | anuncia o cardápio do dia | desjejum, almoço, jantar |
+| **09h30** | reconfere e só fala se algo mudou | almoço, jantar |
+
+O botão **Run workflow** (execução manual) faz o mesmo que as 05h40: manda o dia
+inteiro.
 
 O arquivo `estado/ultimo-envio.json` guarda uma assinatura **por refeição**
-(`2026-09-15|almoco`), não por execução. É isso que faz a reconferência da manhã ficar
+(`2026-09-15|almoco`), não por execução. É isso que faz a reconferência das 09h30 ficar
 calada quando nada mudou, e mandar só o almoço quando só o almoço mudou. O workflow
 commita esse arquivo de volta no repo a cada envio.
 
 > Na primeira execução depois de atualizar o bot, o cardápio do dia é reenviado uma
 > vez: as chaves do formato antigo não casam com o novo e são descartadas.
 
-Dois detalhes do Actions: o cron é em **UTC** (por isso `23` e `12:30`), e a fila do GitHub
-costuma atrasar de 5 a 20 minutos — se precisar de horário exato, use um servidor com
-`cron` de verdade ou um agendador tipo Cloud Scheduler.
+Dois detalhes do Actions: o cron é em **UTC** (por isso `08:40` e `12:30` no arquivo),
+e a fila do GitHub costuma atrasar de 5 a 20 minutos — ou seja, **05h40 é alvo, não
+garantia**: na prática a mensagem cai entre 05h45 e 06h00. Se precisar de horário
+cravado, use um servidor com `cron` de verdade ou um agendador tipo Cloud Scheduler.
 
 Rodando em servidor próprio, a linha do crontab fica:
 

@@ -3,7 +3,7 @@ name: Cardápio RU Alegre
 on:
   schedule:
     # horários em UTC — Alegre é UTC-3
-    - cron: "0 23 * * 0-4"    # 20h00 BRT (dom–qui) — prévia do dia seguinte
+    - cron: "40 8 * * 1-5"    # 05h40 BRT (seg–sex) — anúncio do cardápio do dia
     - cron: "30 12 * * 1-5"   # 09h30 BRT (seg–sex) — reconfere e avisa se mudou
   workflow_dispatch:           # botão de execução manual
 
@@ -32,14 +32,14 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          if [ "${{ github.event.schedule }}" = "0 23 * * 0-4" ]; then
-            # prévia da noite: cobre o dia seguinte inteiro
-            DIA=$(TZ=America/Sao_Paulo date -d "+1 day" +%Y-%m-%d)
-            REFEICOES=desjejum,almoco,jantar
-          else
-            # reconferência da manhã: o desjejum já passou
-            DIA=$(TZ=America/Sao_Paulo date +%Y-%m-%d)
+          DIA=$(TZ=America/Sao_Paulo date +%Y-%m-%d)
+          if [ "${{ github.event.schedule }}" = "30 12 * * 1-5" ]; then
+            # reconferência das 09h30: o desjejum já passou
             REFEICOES=almoco,jantar
+          else
+            # anúncio das 05h40 — e também o botão "Run workflow", que chega aqui
+            # com github.event.schedule vazio e deve mandar o dia inteiro
+            REFEICOES=desjejum,almoco,jantar
           fi
           echo "cardápio de $DIA ($REFEICOES)"
           python ru_bot.py \

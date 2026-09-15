@@ -1,0 +1,6 @@
+schema: spec-driven
+created: 2026-09-15
+
+# O bot nao muda: so o agendamento (.github/workflows) e a documentacao.
+# Nenhum requisito de comportamento do ru_bot.py e alterado.
+skip_specs: true
