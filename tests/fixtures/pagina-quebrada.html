@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Cardápio — Restaurante Universitário — UFES Alegre</title>
+</head>
+<body class="template-cardapio">
+  <div id="portal-breadcrumbs">
+    <span>Você está aqui</span>
+    <a href="/">Início</a>
+    <span>›</span>
+    <a href="/cardapio">Cardápio</a>
+  </div>
+
+  <div id="content">
+    <h1 class="documentFirstHeading">Cardápio do Restaurante Universitário</h1>
+
+    <div id="content-core">
+      <p>O Restaurante Universitário do campus de Alegre serve diariamente refeições
+      elaboradas pelo Setor de Nutrição, com opções para diferentes restrições
+      alimentares. O cardápio da semana é divulgado com antecedência e pode ser
+      consultado pelo aplicativo institucional ou pelo painel disponível na entrada
+      do refeitório.</p>
+
+      <p>Os horários de atendimento são divulgados no início de cada semestre letivo
+      e seguem o calendário acadêmico aprovado pelo conselho da unidade. Em períodos
+      de greve, recesso ou manutenção programada, alterações são comunicadas pelos
+      canais oficiais da universidade.</p>
+
+      <p>O acesso ao refeitório é feito mediante apresentação da carteira estudantil
+      ou do crachá funcional. Estudantes contemplados pelo programa de assistência
+      estudantil possuem isenção total ou parcial, conforme a faixa definida em
+      edital próprio publicado pela Pró-Reitoria de Assuntos Estudantis.</p>
+
+      <p>A programação completa das refeições passou a ser exibida no painel
+      interativo desta página. Caso o conteúdo não carregue, atualize a página ou
+      consulte o aplicativo institucional.</p>
+
+      <div id="painel-cardapio" data-endpoint="/api/v2/cardapio" class="widget-react">
+        <noscript>Ative o JavaScript para visualizar o cardápio.</noscript>
+      </div>
+
+      <p>* O cardápio poderá sofrer alterações sem comunicação prévia, de acordo com
+      as necessidades do Setor de Nutrição.</p>
+      <p>** Informamos que todas as nossas preparações podem conter traços de glúten
+      e lactose (contaminação cruzada).</p>
+    </div>
+  </div>
+</body>
+</html>

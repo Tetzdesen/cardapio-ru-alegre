@@ -32,16 +32,54 @@ Opções úteis:
 | `--refeicoes almoco,jantar` | quais refeições enviar (`todas` para tudo) |
 | `--campus alegre` | filtra o campus; vazio traz Alegre e Jerônimo Monteiro |
 | `--vazio-silencioso` | não manda nada quando não há cardápio publicado |
+| `--estado estado/ultimo-envio.json` | lembra o que já foi enviado; só reenvia refeição que mudou |
+| `--log debug` | nível de log no stderr (`debug`, `info`, `warning`, `error`) |
 | `--dump-html pagina.html` | salva o HTML cru pra depurar o parser |
+
+O cardápio sai no **stdout**; log vai no **stderr**. Então `--print > cardapio.txt`
+guarda só o cardápio.
+
+### Códigos de saída
+
+| código | significado |
+|---|---|
+| `0` | tudo certo — inclusive "hoje não tem cardápio publicado" |
+| `2` | erro de rede depois de esgotar as tentativas, ou falta `TELEGRAM_TOKEN`/`CHAT_ID` |
+| `3` | o Telegram recusou o envio |
+| `4` | a página baixou mas o parser não reconheceu nada — **o site provavelmente mudou** |
+
+O `4` é o que faz o job do GitHub Actions ficar vermelho e te mandar e-mail. Sem ele,
+uma reforma no site da UFES deixaria o bot mudo sem ninguém perceber.
+
+## Testes
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Nenhum teste toca a rede: todos rodam contra as páginas congeladas em
+`tests/fixtures/` (uma página real com as três refeições, uma de dia sem cardápio e
+uma simulando o site reformado). Se você mexer no parser, é essa suíte que avisa se
+quebrou.
 
 ## 3. Agendar de graça (GitHub Actions)
 
 1. Suba o repositório no GitHub.
 2. Settings → Secrets and variables → Actions → New repository secret:
    `TELEGRAM_TOKEN` e `TELEGRAM_CHAT_ID`.
-3. O workflow em `.github/workflows/cardapio.yml` já roda 10h e 16h (BRT), de segunda a sexta.
+3. O workflow em `.github/workflows/cardapio.yml` roda 20h (prévia do dia seguinte) e
+   09h30 (reconferência), de segunda a sexta.
 
-Dois detalhes do Actions: o cron é em **UTC** (por isso `13` e `19`), e a fila do GitHub
+O arquivo `estado/ultimo-envio.json` guarda uma assinatura **por refeição**
+(`2026-09-15|almoco`), não por execução. É isso que faz a reconferência da manhã ficar
+calada quando nada mudou, e mandar só o almoço quando só o almoço mudou. O workflow
+commita esse arquivo de volta no repo a cada envio.
+
+> Na primeira execução depois de atualizar o bot, o cardápio do dia é reenviado uma
+> vez: as chaves do formato antigo não casam com o novo e são descartadas.
+
+Dois detalhes do Actions: o cron é em **UTC** (por isso `23` e `12:30`), e a fila do GitHub
 costuma atrasar de 5 a 20 minutos — se precisar de horário exato, use um servidor com
 `cron` de verdade ou um agendador tipo Cloud Scheduler.
 
@@ -55,8 +93,18 @@ Rodando em servidor próprio, a linha do crontab fica:
 
 O site é um Plone da UFES e a estrutura muda de vez em quando. O parser não depende de
 classes CSS — ele acha os cabeçalhos por regex (`Almoço (Alegre) - sexta-feira, ...`) e
-usa a lista de rótulos em `CATEGORIAS` para separar as seções. Se aparecer um rótulo novo
-("Molho", "Prato Vegano"), basta adicioná-lo nessa lista. Para inspecionar:
+usa a lista de rótulos em `CATEGORIAS` para separar as seções.
+
+Duas coisas avisam antes de virar problema:
+
+- **Rótulo novo** ("Molho", "Prato Vegano"): o bot loga
+  `WARNING: rotulo de secao desconhecido: 'Molho'` e mesmo assim abre a seção — o
+  conteúdo continua saindo. Adicione o rótulo em `CATEGORIAS` para calar o aviso.
+  A detecção usa a marcação do site (`<p><strong>Rótulo</strong></p>`), e não o formato
+  do texto, porque itens e rótulos são lexicalmente idênticos ("Pirão", "Laranja").
+- **Estrutura irreconhecível**: o bot sai com código `4` e o Actions falha.
+
+Para inspecionar:
 
 ```bash
 python ru_bot.py --dump-html pagina.html
@@ -65,5 +113,10 @@ python ru_bot.py --dump-html pagina.html
 ## Cuidados
 
 O RU não tem API pública, então isso é scraping. Rode uma ou duas vezes por dia (é o que
-o agendamento faz) e mantenha um `User-Agent` identificável — está no topo do `ru_bot.py`,
-troque pelo seu e-mail.
+o agendamento faz) e mantenha um `User-Agent` identificável — está no topo do `ru_bot.py`
+e aponta para este repositório.
+
+Falha passageira do servidor (timeout, 502) é repetida 3 vezes com espera dobrando;
+erro definitivo (404, certificado inválido) não é repetido. A verificação de TLS fica
+sempre ligada: o `rnp-icpedu.pem` ao lado do script completa a cadeia que o servidor da
+UFES não envia.
