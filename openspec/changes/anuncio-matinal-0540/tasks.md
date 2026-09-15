@@ -25,7 +25,7 @@
 
 ## 3. Verificação em produção
 
-- [ ] 3.1 Subir a mudança antes das 20h BRT, para a prévia da noite não gravar estado
+- [x] 3.1 Subir a mudança antes das 20h BRT, para a prévia da noite não gravar estado
   do dia seguinte e deixar o primeiro 05:40 mudo; verificar com
   `TZ=America/Sao_Paulo date` antes do push
 - [ ] 3.2 Disparar o workflow manualmente pela aba Actions e verificar no log que ele

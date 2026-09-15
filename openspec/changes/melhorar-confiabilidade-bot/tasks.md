@@ -66,5 +66,11 @@
 - [x] 5.3 Atualizar o README: seção de testes, novo comportamento de código de saída, e a
   nota de que o primeiro run após o deploy reenvia o dia; verificar lendo o README de
   ponta a ponta
-- [ ] 5.4 Executar o workflow por `workflow_dispatch` e verificar nos logs que o run
+- [x] 5.4 Executar o workflow por `workflow_dispatch` e verificar nos logs que o run
   seguinte, sem mudança de cardápio, não envia nada
+  — verificado pelo run agendado de 2026-09-15 10:40 BRT (o das 09h30, atrasado pela
+  fila do Actions) rodando o código novo: descartou as 4 chaves do formato antigo e
+  gravou `2026-09-15|almoco` e `|jantar`, com as assinaturas idênticas às calculadas
+  localmente. Não foi por `workflow_dispatch` nem por leitura de log, e sim pelo
+  commit de estado que o próprio run produziu — evidência mais forte, por ser um run
+  de produção de verdade.
